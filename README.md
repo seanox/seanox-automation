@@ -40,3 +40,8 @@ jobs:
     uses: seanox/seanox-automation/.github/workflows/github-page-update.yaml@1.x
 ```
 </details>
+
+# Contact
+[Issues](https://github.com/seanox/seanox-automation/issues)  
+[Requests](https://github.com/seanox/seanox-automation/pulls)  
+[Mail](http://seanox.com/contact)
