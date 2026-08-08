@@ -11,6 +11,7 @@ automation, orchestration, and secure secret access.
     workflow for building and deploying a repository as a GitHub Page.
   </summary>
   <p></p>
+
 The workflow encapsulates the complete build and deployment process:
 - Checkout of the repository
 - Protection of Liquid expressions in Markdown files
