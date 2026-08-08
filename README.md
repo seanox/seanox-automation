@@ -11,6 +11,7 @@ automation, orchestration, and secure secret access.
     workflow for building and deploying a repository as a GitHub Page.
   </summary>
 
+
 The workflow encapsulates the complete build and deployment process:
 - Checkout of the repository
 - Protection of Liquid expressions in Markdown files
@@ -26,6 +27,6 @@ No parameters are required. The workflow follows the conventions defined by
 ```
 jobs:
   github-page:
-    uses: seanox/seanox-automation/.github/workflows/github-page-update.yaml@1.0.0
+    uses: seanox/seanox-automation/.github/workflows/github-page-update.yaml@1.x
 ```
 </details>
