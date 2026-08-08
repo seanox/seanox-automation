@@ -1,6 +1,17 @@
+<p>
+  <a href="https://github.com/seanox/seanox-automation/pulls"
+      title="Development is waiting for new issues / requests / ideas"
+    ><img src="https://img.shields.io/badge/development-passive-blue?style=for-the-badge"
+  ></a>  
+  <a href="https://github.com/seanox/seanox-automation/issues"
+    ><img src="https://img.shields.io/badge/maintenance-active-green?style=for-the-badge"
+  ></a>
+  <a href="http://seanox.com/contact"
+    ><img src="https://img.shields.io/badge/support-active-green?style=for-the-badge"
+  ></a>
+</p>
+
 # Seanox Automation
-GitHub-native CI/CD Control Plane and Security Plane for reusable workflows,
-automation, orchestration, and secure secret access.
 
 ## Reusable Actions
 
@@ -21,8 +32,7 @@ The workflow encapsulates the complete build and deployment process:
 - Upload of the GitHub Pages artifact
 - Deployment to GitHub Pages
 
-No parameters are required. The workflow follows the conventions defined by
-`seanox-automation`.
+No parameters are required.
 
 ```
 jobs:
