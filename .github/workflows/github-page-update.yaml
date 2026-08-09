@@ -87,6 +87,8 @@
             
             } > _config.yaml
             
+            cat _config.yaml
+            
             # Install dependencies
             bundle config set path vendor/bundle
             bundle install
