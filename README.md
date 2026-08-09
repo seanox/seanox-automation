@@ -58,7 +58,7 @@ jobs:
 
 | Parameter  | Required | Default | Description                                                                 |
 |------------|----------|---------|-----------------------------------------------------------------------------|
-| `includes` | No       | `""`    | files and directories that should be included in the GitHub Pages artifact. |
+| `includes` | No       | `""`    | Files and directories that should be included in the GitHub Pages artifact. |
 
 </details>
 
