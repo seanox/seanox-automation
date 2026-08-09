@@ -33,7 +33,8 @@ The workflow encapsulates the complete build and deployment process:
 - Deployment to GitHub Pages
 
 The optional `includes` parameter can be used to specify files and directories
-that should be included in the GitHub Pages artifact.
+that should be included in the GitHub Pages artifact. Without this parameter,
+the complete source is included.
 
 ```yaml
 jobs:
