@@ -94,7 +94,7 @@
             # Build Jekyll site
             bundle exec jekyll build \
               --source ./ \
-              --destination _site
+              --destination _site \
               --config _config.yaml
 
         - name: Upload Pages artifact
