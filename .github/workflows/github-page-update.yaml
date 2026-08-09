@@ -43,7 +43,8 @@
             ruby-version: 3.1
             bundler-cache: false
 
-        - name: Build Jekyll site
+        - name: Build Jekyll
+          shell: bash
           run: |
             set -euo pipefail
             
