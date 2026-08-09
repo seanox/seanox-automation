@@ -2,15 +2,30 @@
 
   on:
     workflow_call:
+      inputs:
+        includes:
+          description: "Files and directories to keep in the workspace"
+          required: false
+          type: string
+          default: ""
+
     workflow_dispatch:
+      inputs:
+        includes:
+          description: "Files and directories to keep in the workspace"
+          required: false
+          type: string
+          default: ""
 
   permissions:
     contents: read
-    pages: write
-    id-token: write
 
   env:
     WORKSPACE: .github-page-update
+
+  concurrency:
+    group: "github-page-update"
+    cancel-in-progress: true
 
   jobs:
     build:
@@ -18,7 +33,7 @@
 
       steps:
         - name: Checkout
-          uses: actions/checkout@v5
+          uses: actions/checkout@v6
           with:
             path: ${{ env.WORKSPACE }}
 
@@ -30,7 +45,7 @@
 
         - name: Build Jekyll site
           run: |
-            set -e
+            set -euo pipefail
             
             cd "$GITHUB_WORKSPACE/$WORKSPACE"
             
@@ -54,11 +69,23 @@
               > Gemfile
             
             REPO_NAME="${GITHUB_REPOSITORY#*/}"
+
+            {
+              printf '%s\n' \
+                  "url: \"https://${GITHUB_REPOSITORY_OWNER}.github.io\"" \
+                  "baseurl: \"/${REPO_NAME}\""
             
-            printf '%s\n' \
-              "url: \"https://${GITHUB_REPOSITORY_OWNER}.github.io\"" \
-              "baseurl: \"/${REPO_NAME}\"" \
-              > _config.yml
+              if printf '%s\n' "${{ inputs.includes }}" | grep -q '[^[:space:]]'; then
+                printf '%s\n' 'exclude:'
+                find . -mindepth 1 -maxdepth 1 -type d \
+                    -printf '  - %f\n'
+            
+                printf '%s\n' 'include:'
+                printf '%s\n' "${{ inputs.includes }}" |
+                    sed '/^[[:space:]]*$/d; s/^/  - /'
+              fi
+            
+            } > _config.yaml
             
             # Install dependencies
             bundle config set path vendor/bundle
@@ -68,6 +95,7 @@
             bundle exec jekyll build \
               --source ./ \
               --destination _site
+              --config _config.yaml
 
         - name: Upload Pages artifact
           uses: actions/upload-pages-artifact@v5
@@ -82,6 +110,12 @@
     deploy:
       needs: build
       runs-on: ubuntu-latest
+
+      permissions:
+        contents: read
+        pages: write
+        id-token: write
+
       environment:
         name: github-pages
         url: ${{ steps.deployment.outputs.page_url }}
