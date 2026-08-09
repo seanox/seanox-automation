@@ -87,6 +87,7 @@
             
             } > _config.yaml
             
+            tree -L 3
             cat _config.yaml
             
             # Install dependencies
