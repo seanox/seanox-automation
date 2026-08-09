@@ -50,6 +50,26 @@
           run: |
             set -euo pipefail
             
+            # Filter includes, if includes have been set
+            if [[ -n "${INCLUDES//[[:space:]]/}" ]]; then
+              WORKSPACE_TEMP="${WORKSPACE}-temp"
+              mv "$WORKSPACE" "$WORKSPACE_TEMP"
+              mkdir -p "$WORKSPACE"
+              while IFS= read -r path; do
+                [[ -z "${path//[[:space:]]/}" ]] && continue
+                path="${path#/}"
+                source="$(realpath -m "$WORKSPACE_TEMP/$path")"
+                target="$(realpath -m "$WORKSPACE/$path")"
+                if [[ "$source/" != "$(realpath -m "$WORKSPACE_TEMP")/"* ||
+                    "$target/" != "$(realpath -m "$WORKSPACE")/"* ]]; then
+                  continue
+                fi
+                mkdir -p "$(dirname "$target")"
+                mv "$source" "$target"
+              done <<< "${inputs.includes}"
+              rm -rf "$WORKSPACE_TEMP"
+            fi
+            
             cd "$GITHUB_WORKSPACE/$WORKSPACE"
 
             # Filter includes, if includes have been set
