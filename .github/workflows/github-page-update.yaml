@@ -16,12 +16,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Protect Liquid expressions in Markdown
+      - name: Filter for Liquid expressions and GitHub specials in Markdown
         run: |
           find . -type f -name "*.md" -print0 |
           while IFS= read -r -d '' file; do
-            sed -E 's/(\{\{.*?\}\})/{% raw %}\1{% endraw %}/g' "$file" > "$file.tmp" &&
-            mv "$file.tmp" "$file"
+            sed -E -i \
+                -e 's/(\{\{.*?\}\})/{% raw %}\1{% endraw %}/g' \
+                -e 's/^> \[!NOTE\]/> __Note__  /' \
+                -e 's/^> \[!TIP\]/> __Tip__  /' \
+                -e 's/^> \[!IMPORTANT\]/> __Important__  /' \
+                -e 's/^> \[!WARNING\]/> __Warning__  /' \
+                -e 's/^> \[!CAUTION\]/> __Caution__  /' \
+                "$file"
           done
 
       - name: Create Gemfile and Jekyll config
