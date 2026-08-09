@@ -45,13 +45,15 @@
 
         - name: Build Jekyll
           shell: bash
+          env:
+            INCLUDES: ${{ inputs.includes }}
           run: |
             set -euo pipefail
             
             cd "$GITHUB_WORKSPACE/$WORKSPACE"
 
             # Filter includes, if includes have been set
-            if [[ -n "${inputs.includes//[[:space:]]/}" ]]; then
+            if [[ -n "${INCLUDES//[[:space:]]/}" ]]; then
               WORKSPACE_TEMP="${WORKSPACE}-temp"
               mv "$WORKSPACE" "$WORKSPACE_TEMP"
               mkdir -p "$WORKSPACE"
@@ -59,9 +61,9 @@
                 [[ -z "${path//[[:space:]]/}" ]] && continue
                 path="$(echo "$path" | xargs)"
                 path="./$(echo "$path" | sed -E 's#/{2,}#/#g; s#^\./##')"
-                mv "${WORKSPACE_temp}/${path#./}" "$WORKSPACE/"
+                mv "${$WORKSPACE_TEMP}/${path#./}" "$WORKSPACE/"
               done <<< "${inputs.includes}"
-              rm -rf "$WORKSPACE_temp"
+              rm -rf "$WORKSPACE_TEMP"
             fi
             
             # Filter for Liquid expressions and GitHub specials in Markdown
