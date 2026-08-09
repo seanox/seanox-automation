@@ -1,73 +1,92 @@
-name: "GitHub Page: Build and Deploy"
+  name: "GitHub Page: Build and Deploy"
 
-on:
-  workflow_call:
-  workflow_dispatch:
+  on:
+    workflow_call:
+    workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+  permissions:
+    contents: read
+    pages: write
+    id-token: write
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
+  env:
+    WORKSPACE: .github-page-update
 
-      - name: Filter for Liquid expressions and GitHub specials in Markdown
-        run: |
-          find . -type f -name "*.md" -print0 |
-          while IFS= read -r -d '' file; do
-            sed -E -i \
-                -e 's/(\{\{.*?\}\})/{% raw %}\1{% endraw %}/g' \
-                -e 's/^> \[!NOTE\]/> __Note__  /' \
-                -e 's/^> \[!TIP\]/> __Tip__  /' \
-                -e 's/^> \[!IMPORTANT\]/> __Important__  /' \
-                -e 's/^> \[!WARNING\]/> __Warning__  /' \
-                -e 's/^> \[!CAUTION\]/> __Caution__  /' \
-                "$file"
-          done
+  jobs:
+    build:
+      runs-on: ubuntu-latest
 
-      - name: Create Gemfile and Jekyll config
-        run: |
-          printf '%s\n' \
-            'source "https://rubygems.org"' \
-            'gem "github-pages", group: :jekyll_plugins' \
-            > Gemfile
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v5
+          with:
+            path: ${{ env.WORKSPACE }}
 
-          REPO_NAME="${GITHUB_REPOSITORY#*/}"
-          printf '%s\n' \
-            "url: \"https://${GITHUB_REPOSITORY_OWNER}.github.io\"" \
-            "baseurl: \"/${REPO_NAME}\"" \
-            > _config.yml
+        - name: Setup Ruby
+          uses: ruby/setup-ruby@v1
+          with:
+            ruby-version: 3.1
+            bundler-cache: false
 
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: 3.1
-          bundler-cache: true
+        - name: Build Jekyll site
+          run: |
+            set -e
+            
+            cd "$GITHUB_WORKSPACE/$WORKSPACE"
+            
+            # Filter for Liquid expressions and GitHub specials in Markdown
+            find . -type f -name "*.md" -print0 |
+            while IFS= read -r -d '' file; do
+              sed -E -i \
+                  -e 's/(\{\{.*?\}\})/{% raw %}\1{% endraw %}/g' \
+                  -e 's/^> \[!NOTE\]/> __Note__  /' \
+                  -e 's/^> \[!TIP\]/> __Tip__  /' \
+                  -e 's/^> \[!IMPORTANT\]/> __Important__  /' \
+                  -e 's/^> \[!WARNING\]/> __Warning__  /' \
+                  -e 's/^> \[!CAUTION\]/> __Caution__  /' \
+                  "$file"
+            done
+            
+            # Create Gemfile and Jekyll config
+            printf '%s\n' \
+              'source "https://rubygems.org"' \
+              'gem "github-pages", group: :jekyll_plugins' \
+              > Gemfile
+            
+            REPO_NAME="${GITHUB_REPOSITORY#*/}"
+            
+            printf '%s\n' \
+              "url: \"https://${GITHUB_REPOSITORY_OWNER}.github.io\"" \
+              "baseurl: \"/${REPO_NAME}\"" \
+              > _config.yml
+            
+            # Install dependencies
+            bundle config set path vendor/bundle
+            bundle install
+            
+            # Build Jekyll site
+            bundle exec jekyll build \
+              --source ./ \
+              --destination _site
 
-      - name: Build Jekyll site
-        run: |
-          bundle exec jekyll build \
-            --source ./ \
-            --destination _site
+        - name: Upload Pages artifact
+          uses: actions/upload-pages-artifact@v5
+          with:
+            path: ${{ env.WORKSPACE }}/_site
 
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v5
-        with:
-          path: _site
+        - name: Remove temporary workspace
+          if: always()
+          run: |
+            rm -rf -- "$GITHUB_WORKSPACE/$WORKSPACE"
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    deploy:
+      needs: build
+      runs-on: ubuntu-latest
+      environment:
+        name: github-pages
+        url: ${{ steps.deployment.outputs.page_url }}
 
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v5
+      steps:
+        - name: Deploy to GitHub Pages
+          id: deployment
+          uses: actions/deploy-pages@v5
