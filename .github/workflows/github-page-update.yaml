@@ -48,6 +48,20 @@
             set -euo pipefail
             
             cd "$GITHUB_WORKSPACE/$WORKSPACE"
+
+            # Filter includes, if includes have been set
+            if [[ -n "${inputs.includes//[[:space:]]/}" ]]; then
+              WORKSPACE_TEMP="${WORKSPACE}-temp"
+              mv "$WORKSPACE" "$WORKSPACE_TEMP"
+              mkdir -p "$WORKSPACE"
+              while IFS= read -r path; do
+                [[ -z "${path//[[:space:]]/}" ]] && continue
+                path="$(echo "$path" | xargs)"
+                path="./$(echo "$path" | sed -E 's#/{2,}#/#g; s#^\./##')"
+                mv "${WORKSPACE_temp}/${path#./}" "$WORKSPACE/"
+              done <<< "${inputs.includes}"
+              rm -rf "$WORKSPACE_temp"
+            fi
             
             # Filter for Liquid expressions and GitHub specials in Markdown
             find . -type f -name "*.md" -print0 |
@@ -69,26 +83,11 @@
               > Gemfile
             
             REPO_NAME="${GITHUB_REPOSITORY#*/}"
-
-            {
-              printf '%s\n' \
-                  "url: \"https://${GITHUB_REPOSITORY_OWNER}.github.io\"" \
-                  "baseurl: \"/${REPO_NAME}\""
             
-              if printf '%s\n' "${{ inputs.includes }}" | grep -q '[^[:space:]]'; then
-                printf '%s\n' 'exclude:'
-                find . -mindepth 1 -maxdepth 1 -type d \
-                    -printf '  - %f\n'
-            
-                printf '%s\n' 'include:'
-                printf '%s\n' "${{ inputs.includes }}" |
-                    sed '/^[[:space:]]*$/d; s/^/  - /'
-              fi
-            
-            } > _config.yaml
-            
-            tree -L 3
-            cat _config.yaml
+            printf '%s\n' \
+                "url: \"https://${GITHUB_REPOSITORY_OWNER}.github.io\"" \
+                "baseurl: \"/${REPO_NAME}\"" \
+                > _config.yaml
             
             # Install dependencies
             bundle config set path vendor/bundle
